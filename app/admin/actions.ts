@@ -3,7 +3,8 @@
 /* 관리자 페이지의 버튼들이 실제로 하는 일 (서버에서 실행됨)
    - login / logout      : 로그인, 로그아웃
    - saveItem            : 카드 추가 또는 수정 (이미지 업로드 포함)
-   - deleteItem          : 카드 삭제 */
+   - deleteItem          : 카드 삭제
+   - saveHeroText        : 히어로 글자 저장 */
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -11,6 +12,7 @@ import { redirect } from "next/navigation";
 import { siteConfig } from "@/site.config";
 import { checkPassword, endAdminSession, isAdmin, startAdminSession } from "@/lib/admin-auth";
 import { getAdminClient, IMAGE_BUCKET } from "@/lib/supabase-admin";
+import { HERO_TEXT_KEYS } from "@/lib/data";
 
 export type ActionState = { ok?: boolean; message?: string };
 
@@ -113,4 +115,31 @@ export async function deleteItem(formData: FormData) {
 
   revalidatePath("/");
   revalidatePath("/admin");
+}
+
+/* ---------- 히어로 글자 저장 ---------- */
+
+export async function saveHeroText(_prev: ActionState, formData: FormData): Promise<ActionState> {
+  if (!(await isAdmin())) return { message: "로그인이 필요합니다. 새로고침 후 다시 로그인하세요." };
+
+  const supabase = getAdminClient();
+  if (!supabase) return { message: "Supabase가 연결되지 않았습니다. .env.local 을 확인하세요." };
+
+  const now = new Date().toISOString();
+  const rows = HERO_TEXT_KEYS.map((key) => ({
+    key: `hero.${key}`,
+    value: String(formData.get(key) ?? "").trim(),
+    updated_at: now,
+  }));
+
+  const { error } = await supabase.from("site_texts").upsert(rows, { onConflict: "key" });
+  if (error) {
+    return {
+      message: `저장 실패: ${error.message} (supabase/schema.sql 을 SQL Editor 에서 다시 실행했는지 확인하세요)`,
+    };
+  }
+
+  revalidatePath("/");
+  revalidatePath("/admin");
+  return { ok: true, message: "저장했습니다. 사이트 첫 화면에 반영됐어요." };
 }

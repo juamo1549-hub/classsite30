@@ -1,4 +1,4 @@
-import { sampleItems } from "@/site.config";
+import { sampleItems, siteConfig } from "@/site.config";
 import { getPublicClient } from "@/lib/supabase";
 import type { Item } from "@/lib/types";
 
@@ -25,4 +25,56 @@ export async function getItems(section: string): Promise<Item[]> {
     return samples;
   }
   return (data ?? []) as Item[];
+}
+
+/* ---------- 히어로 글자 ---------- */
+
+/** 관리자 페이지에서 바꿀 수 있는 히어로 글자 칸 (site_texts 표의 key 가 'hero.이름') */
+export const HERO_TEXT_KEYS = [
+  "eyebrow",
+  "title",
+  "description",
+  "primaryLabel",
+  "secondaryLabel",
+] as const;
+
+export type HeroTextKey = (typeof HERO_TEXT_KEYS)[number];
+export type HeroText = Record<HeroTextKey, string>;
+
+/** site.config.ts 에 적힌 기본 히어로 글자 */
+export function getDefaultHeroText(): HeroText {
+  const { hero } = siteConfig;
+  return {
+    eyebrow: hero.eyebrow,
+    title: hero.title,
+    description: hero.description,
+    primaryLabel: hero.primaryCta.label,
+    secondaryLabel: hero.secondaryCta.label,
+  };
+}
+
+/**
+ * 히어로 글자를 가져옵니다.
+ * - 관리자 페이지에서 저장한 글자가 있으면 그것을, 없거나 비어 있으면 site.config.ts 의 글자를 씀
+ */
+export async function getHeroText(): Promise<HeroText> {
+  const text = getDefaultHeroText();
+  const supabase = getPublicClient();
+  if (!supabase) return text;
+
+  const { data, error } = await supabase
+    .from("site_texts")
+    .select("key, value")
+    .like("key", "hero.%");
+
+  if (error) {
+    console.error("[getHeroText] Supabase 읽기 실패:", error.message);
+    return text;
+  }
+
+  for (const row of data ?? []) {
+    const key = String(row.key).slice("hero.".length) as HeroTextKey;
+    if (HERO_TEXT_KEYS.includes(key) && row.value.trim()) text[key] = row.value;
+  }
+  return text;
 }
