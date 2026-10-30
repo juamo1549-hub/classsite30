@@ -10,7 +10,7 @@ import type { Item } from "@/lib/types";
 
 export const siteConfig = {
   /* 브라우저 탭 제목과 검색 결과에 보이는 정보 */
-  name: "My Studio",
+  name: "Class Studio",
   title: "My Studio — 나의 첫 웹사이트",
   description: "바이브 코딩으로 만든 나의 웹사이트입니다.",
 
@@ -21,17 +21,26 @@ export const siteConfig = {
     { label: "연락처", href: "#contact" },
   ],
 
+  /* 왼쪽 사이드바(전체 메뉴)의 묶음 제목 */
+  sidebar: {
+    sectionsTitle: "둘러보기", // 소개·기능·연락처
+    classTitle: "우리반", // 히어로 버튼들 (공지사항·자료실·공부방·토론방)
+    adminTitle: "관리",
+  },
+
   /* 상단 메뉴 오른쪽 버튼 (누르면 새 탭에서 관리자 페이지가 열림) */
   secretButton: { label: "비밀버튼", href: "/admin" },
 
   /* 첫 화면(히어로) */
   hero: {
     eyebrow: "Hello, World",
-    title: "생각을 바로\n화면으로 만듭니다",
+    title: "응답하라!\n3학년 O반 ♥",
     description:
       "이 문장을 바꿔 나를 소개해 보세요. site.config.ts 파일에서 글자만 바꾸면 여기가 바뀝니다.",
-    primaryCta: { label: "더 알아보기", href: "#features" },
-    secondaryCta: { label: "연락하기", href: "#contact" },
+    primaryCta: { label: "공지사항", href: "#features" },
+    secondaryCta: { label: "자료실", href: "#contact" },
+    thirdCta: { label: "공부방", href: "#about" },
+    fourthCta: { label: "토론방", href: "#contact" },
   },
 
   /* 소개 섹션 */
@@ -42,6 +51,8 @@ export const siteConfig = {
       "여기에 나 또는 우리 팀, 가게, 프로젝트에 대한 소개를 적습니다.",
       "두 번째 문단도 필요하면 이렇게 줄을 추가하면 됩니다.",
     ],
+    // 오른쪽 반 친구들 일러스트 설명 (화면 읽기 프로그램용)
+    imageAlt: "교실 칠판 앞에서 단체 사진을 찍는 반 친구들 일러스트",
   },
 
   /* 기능(항목) 섹션의 제목 — 카드 목록 자체는 관리자 페이지(/admin)에서 관리 */

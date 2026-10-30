@@ -36,6 +36,8 @@ export const HERO_TEXT_KEYS = [
   "description",
   "primaryLabel",
   "secondaryLabel",
+  "thirdLabel",
+  "fourthLabel",
 ] as const;
 
 export type HeroTextKey = (typeof HERO_TEXT_KEYS)[number];
@@ -50,6 +52,8 @@ export function getDefaultHeroText(): HeroText {
     description: hero.description,
     primaryLabel: hero.primaryCta.label,
     secondaryLabel: hero.secondaryCta.label,
+    thirdLabel: hero.thirdCta.label,
+    fourthLabel: hero.fourthCta.label,
   };
 }
 

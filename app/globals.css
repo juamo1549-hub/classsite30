@@ -1,5 +1,9 @@
 /* 한글 웹폰트 (Pretendard) — 다른 폰트로 바꾸려면 이 줄과 아래 --font-sans 를 바꾸세요 */
 @import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css");
+/* 히어로 큰 제목용 폰트 (검은고딕 — '응답하라 1988' 같은 굵고 각진 레트로 느낌) */
+@import url("https://fonts.googleapis.com/css2?family=Black+Han+Sans&display=swap");
+/* 영어·숫자용 굵고 동글동글한 기하학 폰트 (한글은 Pretendard 가 이어서 보여줌) */
+@import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800&display=swap");
 @import "tailwindcss";
 @import "tw-animate-css";
 
@@ -21,37 +25,51 @@
    색은 #9a0002 같은 HEX 값으로 바꿔도 됩니다.
    ========================================================================== */
 :root {
+  /* 네오브루탈리즘 카드 스타일
+     (연분홍 바탕 + 흰·주황·노랑·청록·파랑 카드 + 2px 검정 선 + 단단한 그림자 + 둥근 모서리) */
   --radius: 0.75rem;
 
-  --background: #ffffff;
-  --foreground: #111111;
+  --background: #fdecf2; /* 페이지 바탕 (연분홍) */
+  --foreground: #111111; /* 글자 + 외곽선 (검정) */
 
-  --card: #ffffff;
+  --card: #ffffff; /* 기본 카드 (흰색) */
   --card-foreground: #111111;
   --popover: #ffffff;
   --popover-foreground: #111111;
 
-  --primary: #111111;
+  --primary: #111111; /* 주요 버튼 (검정 알약) */
   --primary-foreground: #ffffff;
 
-  --secondary: #f4f4f5;
-  --secondary-foreground: #111111;
+  --secondary: #2350e8; /* 강조 (파랑) */
+  --secondary-foreground: #ffffff;
 
-  --muted: #f4f4f5;
-  --muted-foreground: #6b6b6b;
+  --muted: #fde3e9;
+  --muted-foreground: #4b4650;
 
-  --accent: #f4f4f5;
+  --accent: #ffc31f; /* 작은 버튼·강조 (노랑) */
   --accent-foreground: #111111;
 
-  --destructive: #dc2626;
+  --destructive: #e5484d;
 
-  --border: #e5e5e5;
-  --input: #e5e5e5;
-  --ring: #a3a3a3;
+  --border: #111111; /* 2px 검정 외곽선 */
+  --input: #111111;
+  --ring: #2350e8;
+
+  /* 카드 색 (기능 카드 등에서 돌아가며 사용: bg-orange, bg-yellow, bg-teal, bg-secondary) */
+  --orange: #f25a29;
+  --yellow: #ffc31f;
+  --teal: #1cc3a6;
+
+  /* 예전 창 스타일 이름 — 일러스트·아이콘이 쓰고 있어 유지 */
+  --window-bar: #ffffff;
+  --signal-red: #f25a29; /* 아이콘·볼터치 (주황빨강) */
+  --signal-green: #1cc3a6; /* (청록) */
+  --skin: #ffe0cc; /* 일러스트 얼굴색 */
 
   /* 폰트 */
-  --font-body: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --font-body: Montserrat, "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
   --font-display: var(--font-body); /* 제목용 폰트를 따로 쓰고 싶으면 여기만 바꾸기 */
+  --font-poster: "Black Han Sans", var(--font-body); /* 히어로 큰 제목 (retro-title) */
 }
 
 /* 다크 모드용 값 (html 태그에 class="dark" 를 붙이면 적용) */
@@ -74,6 +92,13 @@
   --border: #2a2a2a;
   --input: #2a2a2a;
   --ring: #525252;
+  --window-bar: #1f1f1f;
+  --signal-red: #ef4444;
+  --signal-green: #22c55e;
+  --skin: #e8c4a8;
+  --orange: #f25a29;
+  --yellow: #ffc31f;
+  --teal: #1cc3a6;
 }
 
 /* 위 토큰을 Tailwind 클래스(bg-primary, text-muted-foreground 등)로 연결 — 수정할 필요 없음 */
@@ -96,12 +121,50 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
+  --color-window-bar: var(--window-bar);
+  --color-signal-red: var(--signal-red);
+  --color-signal-green: var(--signal-green);
+  --color-orange: var(--orange);
+  --color-yellow: var(--yellow);
+  --color-teal: var(--teal);
+  --shadow-hard: 4px 4px 0 0 var(--border); /* 흐림 없는 단단한 그림자 (shadow-hard) */
+  --shadow-hard-sm: 3px 3px 0 0 var(--border); /* 버튼용 작은 그림자 (shadow-hard-sm) */
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
   --font-sans: var(--font-body);
   --font-display: var(--font-display);
+}
+
+/* 레트로 포스터 제목 ('응답하라 1988' 로고 느낌)
+   - 굵고 각진 폰트 + 금속처럼 반짝이는 세로 그라데이션 + 검정 외곽선 + 입체 그림자
+   - 사이트 색(흰색 → 노랑 → 주황 띠)으로 금속 간판 느낌을 냄
+   - 사용: <h1 className="retro-title"><span>제목</span></h1>  (span 이 있어야 줄마다 그라데이션이 따로 들어감) */
+@utility retro-title {
+  font-family: var(--font-poster);
+  font-weight: 400;
+  letter-spacing: 0.01em;
+  color: var(--yellow); /* 그라데이션을 못 쓰는 브라우저용 */
+  filter: drop-shadow(0.05em 0.05em 0 var(--border)) drop-shadow(0.03em 0.03em 0 var(--border));
+
+  & > span {
+    background-image: linear-gradient(
+      180deg,
+      var(--card) 0%,
+      var(--card) 20%,
+      var(--yellow) 44%,
+      var(--orange) 52%,
+      var(--yellow) 64%,
+      var(--card) 100%
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    -webkit-text-stroke: 0.035em var(--border);
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
+  }
 }
 
 @layer base {
@@ -119,5 +182,6 @@
   h2,
   h3 {
     font-family: var(--font-display);
+    font-weight: 800; /* 굵고 각진 제목 */
   }
 }

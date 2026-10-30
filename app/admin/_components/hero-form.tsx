@@ -14,9 +14,16 @@ const textareaClass =
 const FIELDS: { key: HeroTextKey; label: string; multiline?: boolean; hint?: string }[] = [
   { key: "eyebrow", label: "작은 머리글" },
   { key: "title", label: "큰 제목", multiline: true, hint: "Enter 로 줄을 바꾸면 사이트에서도 줄이 바뀝니다." },
-  { key: "description", label: "설명 문장", multiline: true },
+  {
+    key: "description",
+    label: "설명 문장",
+    multiline: true,
+    hint: '"1. ..." 처럼 숫자로 시작하는 줄을 쓰면 사이트에서 번호 목록 카드로 보여요. 그 위 줄은 카드 제목이 됩니다.',
+  },
   { key: "primaryLabel", label: "첫 번째 버튼 글자" },
   { key: "secondaryLabel", label: "두 번째 버튼 글자" },
+  { key: "thirdLabel", label: "세 번째 버튼 글자" },
+  { key: "fourthLabel", label: "네 번째 버튼 글자" },
 ];
 
 /** 히어로 글자 수정 칸. values = 저장된 글자, defaults = 비워 뒀을 때 보일 site.config.ts 글자 */
