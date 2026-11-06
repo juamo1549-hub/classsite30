@@ -1,3 +1,5 @@
+import Image from "next/image";
+
 import { cn } from "@/lib/utils";
 
 /* 네오브루탈리즘 '카드' 틀. 2px 검정 선 + 단단한 그림자 + 둥근 모서리.
@@ -6,17 +8,22 @@ import { cn } from "@/lib/utils";
      (bg-card 흰색 · bg-orange · bg-yellow · bg-teal · bg-secondary 파랑)
    색·그림자는 app/globals.css 의 토큰을 따릅니다. */
 
-/** 동그란 아이콘 (이름의 첫 글자) */
-export function Avatar({ name, className }: { name: string; className?: string }) {
+/** 동그란 아이콘. src(프로필 사진 주소)가 있으면 사진, 없으면 이름의 첫 글자 */
+export function Avatar({ name, src, className }: { name: string; src?: string | null; className?: string }) {
   return (
     <span
       aria-hidden
       className={cn(
-        "inline-flex size-8 shrink-0 items-center justify-center rounded-full border-2 bg-yellow text-sm font-extrabold text-foreground",
+        "relative inline-flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 bg-yellow text-sm font-extrabold text-foreground",
         className
       )}
     >
-      {name.trim().charAt(0).toUpperCase()}
+      {src ? (
+        // 회원 프로필 사진은 1시간짜리 임시 주소라 next/image 최적화(캐시)를 쓰지 않음
+        <Image src={src} alt="" fill unoptimized sizes="40px" className="object-cover" />
+      ) : (
+        name.trim().charAt(0).toUpperCase()
+      )}
     </span>
   );
 }

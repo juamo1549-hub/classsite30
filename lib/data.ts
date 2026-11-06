@@ -27,6 +27,31 @@ export async function getItems(section: string): Promise<Item[]> {
   return (data ?? []) as Item[];
 }
 
+/**
+ * 최근 며칠 동안 올라온 글을 최신순으로 가져옵니다. (예: 공지사항·공부방 최근 7일)
+ * - Supabase가 연결 안 됐거나 읽기에 실패하면 빈 목록
+ */
+export async function getRecentItems(sections: string[], days: number): Promise<Item[]> {
+  const supabase = getPublicClient();
+  if (!supabase || sections.length === 0) return [];
+
+  const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
+  const { data, error } = await supabase
+    .from("items")
+    .select("*")
+    .in("section", sections)
+    .eq("is_visible", true)
+    .gte("created_at", since)
+    .order("created_at", { ascending: false })
+    .limit(30);
+
+  if (error) {
+    console.error("[getRecentItems] Supabase 읽기 실패:", error.message);
+    return [];
+  }
+  return (data ?? []) as Item[];
+}
+
 /* ---------- 히어로 글자 ---------- */
 
 /** 관리자 페이지에서 바꿀 수 있는 히어로 글자 칸 (site_texts 표의 key 가 'hero.이름') */

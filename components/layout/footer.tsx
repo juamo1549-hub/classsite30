@@ -3,6 +3,9 @@ import Link from "next/link";
 import { siteConfig } from "@/site.config";
 import { Container } from "@/components/layout/container";
 
+/** "#recent" → "/#recent" (첫 화면이 아닌 페이지에서도 첫 화면의 그 위치로 가도록) */
+const homeAnchor = (href: string) => (href.startsWith("#") ? `/${href}` : href);
+
 /** 맨 아래 영역. 오른쪽 끝의 작은 점(•)이 관리자 페이지로 가는 숨은 버튼입니다. */
 export function Footer() {
   return (
@@ -11,7 +14,7 @@ export function Footer() {
         <p>{siteConfig.footer.copyright}</p>
         <div className="flex items-center gap-6">
           {siteConfig.nav.map((item) => (
-            <a key={item.href} href={item.href} className="hover:text-secondary">
+            <a key={item.href} href={homeAnchor(item.href)} className="hover:text-secondary">
               {item.label}
             </a>
           ))}

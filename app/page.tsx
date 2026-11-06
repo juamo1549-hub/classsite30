@@ -1,59 +1,38 @@
-import { siteConfig } from "@/site.config";
-import { getHeroText } from "@/lib/data";
-import { SiteShell, type SidebarGroup, type SidebarIcon } from "@/components/layout/site-shell";
+import { getCurrentMember } from "@/lib/member-auth";
+import { getScheduleEditor } from "@/lib/schedule";
+import { getSiteMenu } from "@/lib/site-menu";
+import { SiteShell } from "@/components/layout/site-shell";
 import { Footer } from "@/components/layout/footer";
 import { Hero } from "@/components/sections/hero";
-import { About } from "@/components/sections/about";
+import { Schedule } from "@/components/sections/schedule";
+import { RecentPosts } from "@/components/sections/recent-posts";
 import { Features } from "@/components/sections/features";
-import { Contact } from "@/components/sections/contact";
+import { ToTeacher } from "@/components/sections/to-teacher";
 
 /* 메인 페이지 = 섹션 블록을 위에서 아래로 쌓아 놓은 것.
    - 섹션 순서 바꾸기: 아래 줄의 순서를 바꾸면 됩니다.
    - 섹션 빼기: 해당 줄을 지우면 됩니다.
    - 새 섹션 추가: components/sections 에 파일을 만들고 여기에 한 줄 추가.
-   - 상단 메뉴 + 왼쪽 사이드바(전체 메뉴)는 SiteShell 이 담당합니다. */
+   - 상단 메뉴 + 왼쪽 사이드바(전체 메뉴)는 SiteShell 이 담당합니다. (메뉴 목록: lib/site-menu.ts)
+   - 연락처(Contact) 자리는 To teacher! 로 바꿨습니다. (components/sections/contact.tsx 파일은 그대로 있음)
+   - 소개(About) 섹션은 지금 빼 두었습니다. 다시 넣으려면 components/sections/about 을 불러와 <About /> 한 줄 추가. */
 
-// 관리자 페이지에서 내용을 바꾸면 최대 60초 안에 반영 (저장 즉시 반영도 되어 있음)
-export const revalidate = 60;
-
-/** 상단 메뉴 주소(#about 등) → 사이드바 아이콘 */
-const SECTION_ICONS: Record<string, SidebarIcon> = {
-  "#about": "info",
-  "#features": "sparkles",
-  "#contact": "mail",
-};
+// 로그인한 사람마다 상단 메뉴가 달라서, 방문할 때마다 새로 그림 (관리자에서 바꾼 내용도 바로 보임)
+export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
-  const { hero, nav, secretButton, sidebar } = siteConfig;
-  const text = await getHeroText(); // 버튼 이름은 관리자에서 바꾼 글자를 그대로 사용
-
-  const menu: SidebarGroup[] = [
-    {
-      title: sidebar.sectionsTitle,
-      items: nav.map((item) => ({ ...item, icon: SECTION_ICONS[item.href] ?? "info" })),
-    },
-    {
-      title: sidebar.classTitle,
-      items: [
-        { label: text.primaryLabel, href: hero.primaryCta.href, icon: "megaphone" },
-        { label: text.secondaryLabel, href: hero.secondaryCta.href, icon: "folder" },
-        { label: text.thirdLabel, href: hero.thirdCta.href, icon: "book" },
-        { label: text.fourthLabel, href: hero.fourthCta.href, icon: "messages" },
-      ],
-    },
-    {
-      title: sidebar.adminTitle,
-      items: [{ label: secretButton.label, href: secretButton.href, icon: "lock", newTab: true }],
-    },
-  ];
+  const member = await getCurrentMember(); // 로그인한 회원 (없으면 null)
+  const scheduleEditor = await getScheduleEditor(member); // 일정을 쓸 수 있는 사람인지
+  const menu = await getSiteMenu();
 
   return (
-    <SiteShell menu={menu}>
+    <SiteShell menu={menu} member={member}>
       <main className="flex-1">
         <Hero />
-        <About />
+        <Schedule canEdit={scheduleEditor.allowed} />
+        <RecentPosts />
         <Features />
-        <Contact />
+        <ToTeacher member={member} />
       </main>
       <Footer />
     </SiteShell>

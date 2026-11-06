@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowLeft, EyeOff } from "lucide-react";
+import { ArrowLeft, Check, EyeOff, Video } from "lucide-react";
 
 import { siteConfig } from "@/site.config";
 import { isAdmin, isAdminPasswordSet } from "@/lib/admin-auth";
@@ -9,11 +9,13 @@ import type { Item } from "@/lib/types";
 import { getDefaultHeroText, HERO_TEXT_KEYS, type HeroText, type HeroTextKey } from "@/lib/data";
 import { Container } from "@/components/layout/container";
 import { Button } from "@/components/ui/button";
-import { logout } from "./actions";
+import { approveItem, logout } from "./actions";
 import { LoginForm } from "./_components/login-form";
 import { ItemForm } from "./_components/item-form";
 import { DeleteButton } from "./_components/delete-button";
 import { HeroForm } from "./_components/hero-form";
+import { MembersPanel } from "./_components/members-panel";
+import { SubmissionsPanel } from "./_components/submissions-panel";
 
 /* 관리자 페이지 (주소: /admin)
    1) 비밀번호가 설정 안 됐으면 → 설정 안내
@@ -78,6 +80,8 @@ export default async function AdminPage(props: PageProps<"/admin">) {
   const sections = siteConfig.adminSections;
   const requested = typeof searchParams.section === "string" ? searchParams.section : undefined;
   const isHeroTab = requested === "hero";
+  const isMembersTab = requested === "members";
+  const isInboxTab = requested === "inbox";
   const current = sections.find((s) => s.key === requested) ?? sections[0];
 
   // 히어로 탭: 저장된 히어로 글자 불러오기
@@ -127,19 +131,29 @@ export default async function AdminPage(props: PageProps<"/admin">) {
         <Button asChild size="sm" variant={isHeroTab ? "default" : "outline"}>
           <Link href="/admin?section=hero">히어로</Link>
         </Button>
+        <Button asChild size="sm" variant={isMembersTab ? "default" : "outline"}>
+          <Link href="/admin?section=members">회원</Link>
+        </Button>
+        <Button asChild size="sm" variant={isInboxTab ? "default" : "outline"}>
+          <Link href="/admin?section=inbox">To teacher!</Link>
+        </Button>
         {sections.map((s) => (
           <Button
             key={s.key}
             asChild
             size="sm"
-            variant={!isHeroTab && s.key === current.key ? "default" : "outline"}
+            variant={!isHeroTab && !isMembersTab && !isInboxTab && s.key === current.key ? "default" : "outline"}
           >
             <Link href={`/admin?section=${s.key}`}>{s.label}</Link>
           </Button>
         ))}
       </nav>
 
-      {isHeroTab ? (
+      {isInboxTab ? (
+        <SubmissionsPanel />
+      ) : isMembersTab ? (
+        <MembersPanel supabase={supabase} />
+      ) : isHeroTab ? (
         <section className="mt-8 max-w-2xl rounded-xl border p-6">
           <h2 className="mb-5 text-lg font-semibold">히어로(첫 화면) 글자</h2>
           {heroError ? (
@@ -180,8 +194,10 @@ export default async function AdminPage(props: PageProps<"/admin">) {
                   {items.map((item) => (
                     <li key={item.id} className="rounded-xl border">
                       <div className="flex items-center gap-4 p-4">
-                        <div className="relative size-14 shrink-0 overflow-hidden rounded-lg bg-muted">
-                          {item.image_url ? (
+                        <div className="relative flex size-14 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-muted">
+                          {item.image_url && item.media_type === "video" ? (
+                            <Video className="size-6 text-muted-foreground" aria-label="동영상" />
+                          ) : item.image_url ? (
                             <Image src={item.image_url} alt="" fill sizes="56px" className="object-cover" />
                           ) : null}
                         </div>
@@ -189,11 +205,28 @@ export default async function AdminPage(props: PageProps<"/admin">) {
                           <p className="flex items-center gap-2 font-medium">
                             <span className="truncate">{item.title}</span>
                             {!item.is_visible ? (
-                              <EyeOff className="size-4 shrink-0 text-muted-foreground" aria-label="숨김" />
+                              item.author ? (
+                                <span className="shrink-0 rounded-full border-2 bg-yellow px-2 py-0.5 text-xs font-bold">
+                                  승인 대기
+                                </span>
+                              ) : (
+                                <EyeOff className="size-4 shrink-0 text-muted-foreground" aria-label="숨김" />
+                              )
                             ) : null}
                           </p>
-                          <p className="text-xs text-muted-foreground">순서 {item.sort_order}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {item.author ? `${item.author} · ` : ""}순서 {item.sort_order}
+                          </p>
                         </div>
+                        {!item.is_visible ? (
+                          <form action={approveItem}>
+                            <input type="hidden" name="id" value={item.id} />
+                            <Button type="submit" size="sm" variant="accent">
+                              <Check aria-hidden />
+                              승인
+                            </Button>
+                          </form>
+                        ) : null}
                         <DeleteButton id={item.id} imageUrl={item.image_url} />
                       </div>
                       <details className="border-t px-4 py-3">

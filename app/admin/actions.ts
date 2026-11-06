@@ -4,6 +4,11 @@
    - login / logout      : 로그인, 로그아웃
    - saveItem            : 카드 추가 또는 수정 (이미지 업로드 포함)
    - deleteItem          : 카드 삭제
+   - approveItem         : 학생이 올린 갤러리 게시물 승인 (사이트에 보이게)
+   - setMemberStatus     : 회원 가입 승인 / 거절 / 승인 취소
+   - setScheduleAccess   : 회원에게 학급 일정(캘린더) 쓰기 권한 주기 / 빼기
+   - setNoticeAccess     : 회원에게 공지사항 쓰기 권한 주기 / 빼기
+   - replySubmission     : To teacher! 제출 글에 선생님 답글 저장
    - saveHeroText        : 히어로 글자 저장 */
 
 import { revalidatePath } from "next/cache";
@@ -47,6 +52,7 @@ export async function saveItem(_prev: ActionState, formData: FormData): Promise<
   const title = String(formData.get("title") ?? "").trim();
   const description = String(formData.get("description") ?? "").trim();
   const linkUrl = String(formData.get("link_url") ?? "").trim();
+  const author = String(formData.get("author") ?? "").trim().slice(0, 30);
   const sortOrder = Number(formData.get("sort_order") ?? 0) || 0;
   const isVisible = formData.get("is_visible") === "on";
   const removeImage = formData.get("remove_image") === "on";
@@ -65,6 +71,10 @@ export async function saveItem(_prev: ActionState, formData: FormData): Promise<
     sort_order: sortOrder,
     is_visible: isVisible,
   };
+
+  // 올린 사람: 적었으면 저장, 원래 있던 이름을 지웠으면 비움 (칸을 안 쓰면 손대지 않음 — DB에 author 칸이 없어도 동작)
+  if (author) row.author = author;
+  else if (formData.get("had_author") === "1") row.author = null;
 
   // 새 이미지를 올린 경우 → Supabase 저장소에 업로드
   if (image instanceof File && image.size > 0) {
@@ -91,6 +101,7 @@ export async function saveItem(_prev: ActionState, formData: FormData): Promise<
 
   revalidatePath("/");
   revalidatePath("/admin");
+  revalidatePath("/gallery");
   return { ok: true, message: id ? "수정했습니다." : "추가했습니다." };
 }
 
@@ -115,6 +126,24 @@ export async function deleteItem(formData: FormData) {
 
   revalidatePath("/");
   revalidatePath("/admin");
+  revalidatePath("/gallery");
+}
+
+/* ---------- 갤러리 게시물 승인 ---------- */
+
+export async function approveItem(formData: FormData) {
+  if (!(await isAdmin())) return;
+  const supabase = getAdminClient();
+  if (!supabase) return;
+
+  const id = String(formData.get("id") ?? "");
+  if (!id) return;
+
+  await supabase.from("items").update({ is_visible: true }).eq("id", id);
+
+  revalidatePath("/");
+  revalidatePath("/admin");
+  revalidatePath("/gallery");
 }
 
 /* ---------- 히어로 글자 저장 ---------- */
@@ -142,4 +171,74 @@ export async function saveHeroText(_prev: ActionState, formData: FormData): Prom
   revalidatePath("/");
   revalidatePath("/admin");
   return { ok: true, message: "저장했습니다. 사이트 첫 화면에 반영됐어요." };
+}
+
+/* ---------- 회원 가입 승인 / 거절 ---------- */
+
+export async function setMemberStatus(formData: FormData) {
+  if (!(await isAdmin())) return;
+  const supabase = getAdminClient();
+  if (!supabase) return;
+
+  const id = String(formData.get("id") ?? "");
+  const status = String(formData.get("status") ?? "");
+  if (!id || !["pending", "approved", "rejected"].includes(status)) return;
+
+  await supabase.from("members").update({ status }).eq("id", id);
+
+  revalidatePath("/admin");
+  revalidatePath("/gallery");
+}
+
+/* ---------- 학급 일정 쓰기 권한 ---------- */
+
+export async function setScheduleAccess(formData: FormData) {
+  if (!(await isAdmin())) return;
+  const supabase = getAdminClient();
+  if (!supabase) return;
+
+  const id = String(formData.get("id") ?? "");
+  const allow = formData.get("allow") === "1";
+  if (!id) return;
+
+  await supabase.from("members").update({ can_edit_schedule: allow }).eq("id", id);
+
+  revalidatePath("/");
+  revalidatePath("/admin");
+}
+
+/* ---------- To teacher! 답글 ---------- */
+
+export async function replySubmission(formData: FormData) {
+  if (!(await isAdmin())) return;
+  const supabase = getAdminClient();
+  if (!supabase) return;
+
+  const id = String(formData.get("id") ?? "");
+  const reply = String(formData.get("reply") ?? "").trim().slice(0, 3000);
+  if (!id) return;
+
+  await supabase
+    .from("submissions")
+    .update({ reply: reply || null, replied_at: reply ? new Date().toISOString() : null })
+    .eq("id", id);
+
+  revalidatePath("/admin");
+}
+
+/* ---------- 공지사항 쓰기 권한 ---------- */
+
+export async function setNoticeAccess(formData: FormData) {
+  if (!(await isAdmin())) return;
+  const supabase = getAdminClient();
+  if (!supabase) return;
+
+  const id = String(formData.get("id") ?? "");
+  const allow = formData.get("allow") === "1";
+  if (!id) return;
+
+  await supabase.from("members").update({ can_write_notice: allow }).eq("id", id);
+
+  revalidatePath("/notice");
+  revalidatePath("/admin");
 }

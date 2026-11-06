@@ -23,10 +23,22 @@ export function ItemForm({ section, item }: { section: string; item?: Item }) {
     <form ref={formRef} action={action} className="grid gap-4">
       <input type="hidden" name="section" value={section} />
       {item ? <input type="hidden" name="id" value={item.id} /> : null}
+      {item?.author ? <input type="hidden" name="had_author" value="1" /> : null}
 
       <label className="grid gap-1.5 text-sm">
         <span className="font-medium">제목 *</span>
         <input name="title" required defaultValue={item?.title ?? ""} className={inputClass} />
+      </label>
+
+      <label className="grid gap-1.5 text-sm">
+        <span className="font-medium">올린 사람 (선택)</span>
+        <input
+          name="author"
+          maxLength={30}
+          placeholder="예: 김민지 — 갤러리 피드에 이름으로 보여요"
+          defaultValue={item?.author ?? ""}
+          className={inputClass}
+        />
       </label>
 
       <label className="grid gap-1.5 text-sm">

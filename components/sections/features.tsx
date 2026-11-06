@@ -1,91 +1,39 @@
-import Image from "next/image";
-import { ArrowUpRight, Sparkles } from "lucide-react";
-
 import { siteConfig } from "@/site.config";
 import { getItems } from "@/lib/data";
 import { Container } from "@/components/layout/container";
-import { SectionHeader } from "@/components/layout/section-header";
-import { Window } from "@/components/ui/window";
-import { cn } from "@/lib/utils";
+import { GalleryCard } from "@/components/sections/gallery-card";
+import { GalleryViewer } from "@/components/sections/gallery-viewer";
 
-/** 카드 색을 차례대로 돌아가며 사용 (색 자체는 app/globals.css 토큰) */
-const CARD_COLORS = [
-  "bg-yellow",
-  "bg-teal",
-  "bg-secondary text-secondary-foreground",
-  "bg-card",
-];
-
-/* 기능(항목) 섹션.
-   - 제목/설명: site.config.ts 의 features
-   - 카드 목록: 관리자 페이지(/admin)에서 관리 (Supabase 연결 전에는 예시 카드가 보임) */
+/* 갤러리 섹션 (예전 '기능' 섹션. 파일 이름은 그대로 둠).
+   - 제목/설명/버튼 글자: site.config.ts 의 features
+   - 사진과 글: 관리자 페이지(/admin)의 '갤러리' 탭에서 올림 (Supabase 연결 전에는 예시 카드가 보임)
+   - 가장 최근에 올린 사진이 먼저 나옴 (미리보기와 갤러리 창 모두)
+   - 첫 화면에는 최신 features.previewCount 장만 미리보기,
+     제목·'전체 보기'를 누르면 새 탭에서 갤러리 피드 페이지(/gallery)가 열림 */
 export async function Features() {
   const { features } = siteConfig;
-  const items = await getItems("features");
+  const items = (await getItems("features")).sort(
+    (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+  );
+  const preview = items.slice(0, features.previewCount);
 
   return (
-    <section id="features" className="scroll-mt-16 py-16 sm:py-24">
+    <section id="gallery" className="scroll-mt-16 py-16 sm:py-24">
       <Container>
-        <SectionHeader
+        <GalleryViewer
           eyebrow={features.eyebrow}
           title={features.title}
           description={features.description}
+          openHint={features.openHint}
         />
 
-        {items.length === 0 ? (
-          <p className="mt-12 font-bold">아직 등록된 항목이 없습니다.</p>
+        {preview.length === 0 ? (
+          <p className="mt-12 font-bold">{features.emptyText}</p>
         ) : (
-          <div className="mt-12 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
-            {items.map((item, i) => {
-              const card = (
-                <Window
-                  className={cn(
-                    "group h-full transition-transform hover:-translate-x-0.5 hover:-translate-y-0.5",
-                    CARD_COLORS[i % CARD_COLORS.length]
-                  )}
-                  bodyClassName="h-full p-4"
-                >
-                  <article>
-                    <div className="relative aspect-[4/3] overflow-hidden rounded-lg border-2 bg-card text-card-foreground">
-                      {item.image_url ? (
-                        <Image
-                          src={item.image_url}
-                          alt={item.title}
-                          fill
-                          sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
-                          className="object-cover transition-transform duration-500 group-hover:scale-105"
-                        />
-                      ) : (
-                        <div className="flex h-full items-center justify-center text-muted-foreground">
-                          <Sparkles className="size-8" />
-                        </div>
-                      )}
-                    </div>
-                    <div className="px-2 pb-2 pt-5">
-                      <h3 className="flex items-center justify-between gap-2 text-lg font-extrabold">
-                        {item.title}
-                        {item.link_url ? (
-                          <ArrowUpRight className="size-5 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
-                        ) : null}
-                      </h3>
-                      {item.description ? (
-                        <p className="mt-2 text-sm font-medium leading-relaxed opacity-80">
-                          {item.description}
-                        </p>
-                      ) : null}
-                    </div>
-                  </article>
-                </Window>
-              );
-
-              return item.link_url ? (
-                <a key={item.id} href={item.link_url} target="_blank" rel="noreferrer">
-                  {card}
-                </a>
-              ) : (
-                <div key={item.id}>{card}</div>
-              );
-            })}
+          <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            {preview.map((item, i) => (
+              <GalleryCard key={item.id} item={item} index={i} />
+            ))}
           </div>
         )}
       </Container>
